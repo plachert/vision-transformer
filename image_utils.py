@@ -20,6 +20,19 @@ def channel_first(image):
     return transposed
 
 
+def image_to_patches(image, patch_size=(16, 16)):
+    """Divide image into patches."""
+    w, h, c = image.shape
+    assert w % patch_size[0] == 0
+    assert h % patch_size[1] == 0
+    n_columns =  w // patch_size[0]
+    n_rows = h // patch_size[1]
+    patches = np.reshape(image, (patch_size[0], patch_size[1], c, n_columns * n_rows))
+    return patches
+    
+    
+
 if __name__ == "__main__":
-    image = np.random((224, 224, 3), dtype=np.uint8)
+    image = np.random.rand(224, 224, 3)
     print(image.shape)
+    patches = image_to_patches(image).shape
