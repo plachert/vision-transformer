@@ -27,7 +27,8 @@ def image_to_patches(image, patch_size=(16, 16)):
     assert h % patch_size[1] == 0
     n_columns =  w // patch_size[0]
     n_rows = h // patch_size[1]
-    patches = np.reshape(image, (patch_size[0], patch_size[1], c, n_columns * n_rows))
+    patches = image.reshape(n_columns, patch_size[0], n_rows, patch_size[1], c)
+    patches = patches.transpose(0, 2, 1, 3, 4).reshape(-1, patch_size[0], patch_size[1], c) # Perhaps, this can be improved
     return patches
     
     
