@@ -20,11 +20,12 @@ class ImageNet100(Dataset):
             pass
         else:
             path = self.path.joinpath('val.X')
-            image_paths = path.glob('*/*.jpg')
+            image_paths = path.glob('*/*.JPEG')
         return image_paths
             
     def _load_labels(self):
-        labels = json.load(self.path.joinpath("Labels.json"))["root"]
+        with open(self.path.joinpath("Labels.json"), "r") as file:
+            labels = json.load(file)
         return labels
         
     def __len__(self):
@@ -34,4 +35,4 @@ class ImageNet100(Dataset):
         pass
         
 if __name__ == "__main__":
-    ds = ImageNet100(pathlib.Path('imagenet100'))
+    ds = ImageNet100(pathlib.Path('/home/piotr/datasets/vision/imagenet_100'), is_train=False)
