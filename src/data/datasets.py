@@ -11,16 +11,12 @@ class ImageNet100(Dataset):
     def __init__(self, path: pathlib.Path, is_train: bool):
         super().__init__()
         self.path = path
-        self.is_train = is_train
+        self.train_or_val = "train" if is_train else "val"
         self.labels = self._load_labels()
         self.image_paths = self._get_image_paths()
         
     def _get_image_paths(self):
-        if self.is_train:
-            pass
-        else:
-            path = self.path.joinpath('val.X')
-            image_paths = path.glob('*/*.JPEG')
+        image_paths = list(self.path.glob(f'{self.train_or_val}*/*/*.JPEG'))
         return image_paths
             
     def _load_labels(self):
@@ -36,3 +32,4 @@ class ImageNet100(Dataset):
         
 if __name__ == "__main__":
     ds = ImageNet100(pathlib.Path('/home/piotr/datasets/vision/imagenet_100'), is_train=False)
+    print(ds.image_paths)
