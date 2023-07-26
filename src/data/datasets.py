@@ -38,6 +38,7 @@ class ImageNet100(Dataset):
         class_idx, class_name = self.labels[id_]
         return {"image": image, "class_idx": class_idx, "class_name": class_name}
         
+
 if __name__ == "__main__":
     ds = ImageNet100(pathlib.Path('/home/piotr/datasets/vision/imagenet_100'), is_train=False)
     print(ds[0])
