@@ -3,18 +3,25 @@ import pathlib
 from PIL import Image
 import json
 import numpy as np
+from typing import Callable
 
 
 class ImageNet100(Dataset):
     
     """https://www.kaggle.com/datasets/ambityga/imagenet100"""
     
-    def __init__(self, path: pathlib.Path, is_train: bool):
+    def __init__(
+        self, 
+        path: pathlib.Path, 
+        is_train: bool,
+        transform: Callable | None = None,
+        ):
         super().__init__()
         self.path = path
         self.train_or_val = "train" if is_train else "val"
         self.image_paths = self._get_image_paths()
-        self.labels = self._create_mapping() # maps original id to a number (0-99)   
+        self.labels = self._create_mapping() # maps original id to a number (0-99)
+        self.transform = transform
         
     def _get_image_paths(self):
         image_paths = list(self.path.glob(f'{self.train_or_val}*/*/*.JPEG'))
@@ -34,6 +41,8 @@ class ImageNet100(Dataset):
     def __getitem__(self, idx):
         image_path = self.image_paths[idx]
         image = np.array(Image.open(image_path))
+        if self.transform:
+            image = self.transform(image)
         id_ = image_path.parent.name
         class_idx, class_name = self.labels[id_]
         return {"image": image, "class_idx": class_idx, "class_name": class_name}
