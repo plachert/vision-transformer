@@ -2,6 +2,8 @@ from typing import Any
 import lightning as L
 import torch.nn as nn
 import torch
+from torchmetrics.classification.accuracy import Accuracy
+from torchmetrics import MaxMetric, MeanMetric
 
 
 class ImageClassifier(L.LightningModule):
@@ -9,22 +11,42 @@ class ImageClassifier(L.LightningModule):
             self,
             feature_extractor: nn.Module, 
             classification_head: nn.Module,
+            optimizer_factory: torch.optim.Optimizer,
+            num_classes: int, 
             ):
         super().__init__()
         self.feature_extractor = feature_extractor
         self.classification_head = classification_head
         self.loss = nn.CrossEntropyLoss()
+        self.optimizer = optimizer_factory(self.parameters())
+        self._setup_metrics(num_classes)
+
+    def _setup_metrics(self, num_classes):
+        self.train_acc = Accuracy(task="multiclass", num_classes=num_classes)
+        self.val_acc = Accuracy(task="multiclass", num_classes=num_classes)
+        self.test_acc = Accuracy(task="multiclass", num_classes=num_classes)
+        self.train_loss = MeanMetric()
+        self.val_loss = MeanMetric()
+        self.test_loss = MeanMetric()
+        self.val_acc_best = MaxMetric()
 
     def forward(self, image):
         features = self.feature_extractor(image)
-        preds = self.classification_head(features)
-        return preds
+        logits = self.classification_head(features)
+        return logits
     
     def _step(self, batch):
         image, targets = batch['image'], batch['class_idx']
-        preds = self(image)
+        logits = self(image)
+        preds = torch.argmax(logits, dim=1)
         loss = self.loss(preds, targets)
         return loss, preds, targets
+    
+    def on_train_start(self):
+        """Reset after sanity checks."""
+        self.val_loss.reset()
+        self.val_acc.reset()
+        self.val_acc_best.reset()
 
     def training_step(self, batch, batch_idx):
         loss, preds, targets = self._step(batch)
@@ -37,4 +59,4 @@ class ImageClassifier(L.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=0.001)
+        return self.optimizer
