@@ -9,14 +9,12 @@ from torchmetrics import MaxMetric, MeanMetric
 class ImageClassifier(L.LightningModule):
     def __init__(
             self,
-            feature_extractor: nn.Module, 
-            classification_head: nn.Module,
+            model: nn.Module,
             optimizer_factory: torch.optim.Optimizer,
             num_classes: int, 
             ):
         super().__init__()
-        self.feature_extractor = feature_extractor
-        self.classification_head = classification_head
+        self.model = model
         self.loss = nn.CrossEntropyLoss()
         self.optimizer = optimizer_factory(self.parameters())
         self._setup_metrics(num_classes)
@@ -31,8 +29,7 @@ class ImageClassifier(L.LightningModule):
         self.val_acc_best = MaxMetric()
 
     def forward(self, image):
-        features = self.feature_extractor(image)
-        logits = self.classification_head(features)
+        logits = self.model(image)
         return logits
     
     def _step(self, batch):
