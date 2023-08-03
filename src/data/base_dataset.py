@@ -16,14 +16,14 @@ class ImageClassificationDataset(Dataset, ABC):
     @abstractproperty
     def images(self) -> list[pathlib.Path]:
         """Return paths of images."""
-
+        
     @abstractproperty
-    def class_mapping(self) -> list[str]:
-        """Return classes of objects."""
+    def labels(self) -> np.ndarray:
+        """Return labels in range 0:no_classes-1"""
 
     @property
     def no_classes(self):
-        return len(self.classes)
+        return np.max(self.labels) + 1
 
     def __len__(self):
         return len(self.images)
