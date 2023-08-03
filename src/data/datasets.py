@@ -1,53 +1,56 @@
-from torch.utils.data import Dataset
+from src.data.base_dataset import ImageClassificationDataset
 import pathlib
-from PIL import Image
 import json
 import numpy as np
 from typing import Callable
 
+PATHS = {
+    "ImageNet100": pathlib.Path('/home/piotr/datasets/vision/imagenet_100')
+}
 
-class ImageNet100(Dataset):
+
+class ImageNet100(ImageClassificationDataset):
     
     """https://www.kaggle.com/datasets/ambityga/imagenet100"""
     
     def __init__(
         self, 
-        path: pathlib.Path, 
+        path: pathlib.Path = PATHS["ImageNet100"], 
         is_train: bool,
         transform: Callable | None = None,
         ):
-        super().__init__()
+        super().__init__(transform)
         self.path = path
         self.train_or_val = "train" if is_train else "val"
-        self.image_paths = self._get_image_paths()
-        self.labels = self._create_mapping() # maps original id to a number (0-99)
+        self._images = self._get_image_paths()
+        self._labels = self._get_labels() # maps original id to a number (0-99)
         self.transform = transform
         
     def _get_image_paths(self):
-        image_paths = list(self.path.glob(f'{self.train_or_val}*/*/*.JPEG'))
-        return image_paths
-            
-    def _create_mapping(self):
+        return list(self.path.glob(f'{self.train_or_val}*/*/*.JPEG'))
+    
+    def _get_labels(self):
         mapping = {}
         with open(self.path.joinpath("Labels.json"), "r") as file:
-            labels = json.load(file)
-        for idx, (id_, class_name) in enumerate(labels.items()):
+            label_mapping = json.load(file)
+        for idx, (id_, class_name) in enumerate(label_mapping.items()):
             mapping[id_] = (idx, class_name)
-        return mapping        
+        labels = np.zeros(len(self), dtype=int)
+        for idx, path in enumerate(self.images):
+            id_ = path.parent.name
+            labels[idx] = mapping[id_][0]           
+        return labels        
         
-    def __len__(self):
-        return len(self.image_paths)
+    @property
+    def images(self) -> list[pathlib.Path]:
+        return self._images
     
-    def __getitem__(self, idx):
-        image_path = self.image_paths[idx]
-        image = np.array(Image.open(image_path))
-        if self.transform:
-            image = self.transform(image)
-        id_ = image_path.parent.name
-        class_idx, class_name = self.labels[id_]
-        return {"image": image, "class_idx": class_idx, "class_name": class_name}
+    @property
+    def labels(self) -> np.ndarray:
+        return self._labels
+
         
 
 if __name__ == "__main__":
-    ds = ImageNet100(pathlib.Path('/home/piotr/datasets/vision/imagenet_100'), is_train=False)
-    print(ds[0])
+    ds = ImageNet100(is_train=False)
+    print(ds.no_classes)
