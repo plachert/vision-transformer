@@ -48,4 +48,3 @@ class ImageNet100(ImageClassificationDataset):
     @property
     def labels(self) -> np.ndarray:
         return self._labels
-

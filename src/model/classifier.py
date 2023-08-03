@@ -33,7 +33,7 @@ class ImageClassifier(L.LightningModule):
         return logits
     
     def _step(self, batch):
-        image, targets = batch['image'], batch['class_idx']
+        image, targets = batch['image'], batch['label']
         logits = self(image)
         preds = torch.argmax(logits, dim=1)
         loss = self.loss(preds, targets)
