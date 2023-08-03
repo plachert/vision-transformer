@@ -15,9 +15,9 @@ class ImageNet100(ImageClassificationDataset):
     
     def __init__(
         self, 
-        path: pathlib.Path = PATHS["ImageNet100"], 
         is_train: bool,
         transform: Callable | None = None,
+        path: pathlib.Path = PATHS["ImageNet100"], 
         ):
         super().__init__(transform)
         self.path = path
@@ -49,8 +49,3 @@ class ImageNet100(ImageClassificationDataset):
     def labels(self) -> np.ndarray:
         return self._labels
 
-        
-
-if __name__ == "__main__":
-    ds = ImageNet100(is_train=False)
-    print(ds.no_classes)
