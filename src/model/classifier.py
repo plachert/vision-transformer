@@ -36,7 +36,7 @@ class ImageClassifier(L.LightningModule):
         image, targets = batch['image'], batch['label']
         logits = self(image)
         preds = torch.argmax(logits, dim=1)
-        loss = self.loss(preds, targets)
+        loss = self.loss(logits, targets)
         return loss, preds, targets
     
     def on_train_start(self):
