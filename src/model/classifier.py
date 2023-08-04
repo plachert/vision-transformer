@@ -48,14 +48,16 @@ class ImageClassifier(L.LightningModule):
     def training_step(self, batch, batch_idx):
         loss, preds, targets = self._step(batch)
         self.train_acc(preds, targets)
-        self.log('train/loss', loss, on_epoch=True, on_step=False)
+        self.train_loss(loss)
+        self.log('train/loss', self.train_loss, on_epoch=True, on_step=False)
         self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         loss, preds, targets = self._step(batch)
         self.val_acc(preds, targets)
-        self.log('val/loss', loss, on_epoch=True, on_step=False)
+        self.val_loss(loss)
+        self.log('val/loss', self.val_loss, on_epoch=True, on_step=False)
         self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
