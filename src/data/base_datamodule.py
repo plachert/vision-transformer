@@ -9,10 +9,10 @@ class BaseDataModule(L.LightningDataModule):
         self,
         train_transform: Callable | None = None,
         inference_transform: Callable | None = None,
-        train_batch_size: int = 32,
+        train_batch_size: int = 256,
         val_batch_size: int = 32,
         test_batch_size: int = 1,
-        num_workers: int = 2,
+        num_workers: int = 16,
         pin_memory: bool = True,
     ):
         super().__init__()
@@ -33,6 +33,7 @@ class BaseDataModule(L.LightningDataModule):
             batch_size=self.train_batch_size,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
+            shuffle=True,
         )
 
     def val_dataloader(self):
