@@ -37,5 +37,5 @@ class ImageClassificationDataset(Dataset, ABC):
 
     def _load_image(self, path: pathlib.Path) -> np.ndarray:
         """Load image from path."""
-        image = Image.open(path)
+        image = Image.open(path).convert('RGB')
         return image
