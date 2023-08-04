@@ -4,7 +4,7 @@ from abc import ABC
 from abc import abstractproperty
 import pathlib
 import numpy as np
-import cv2
+from PIL import Image
 
 
 class ImageClassificationDataset(Dataset, ABC):
@@ -37,6 +37,5 @@ class ImageClassificationDataset(Dataset, ABC):
 
     def _load_image(self, path: pathlib.Path) -> np.ndarray:
         """Load image from path."""
-        image_bgr = cv2.imread(str(path))[..., :3]
-        image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-        return image_rgb
+        image = Image.open(path)
+        return image
