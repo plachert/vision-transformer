@@ -19,9 +19,7 @@ train_transform = transforms.Compose([
 ])
 inference_transform = train_transform
 
-def main():
-    # mean of the imagenet dataset for normalizing
-    
+def main():    
     datamodule = ImageNet100DataModule(
         train_transform=train_transform, inference_transform=inference_transform,
     )
