@@ -22,7 +22,7 @@ def channel_first(image):
 
 def image_to_patches(image, patch_size=(16, 16)):
     """Divide image into patches."""
-    w, h, c = image.shape
+    h, w, c = image.shape
     assert w % patch_size[0] == 0
     assert h % patch_size[1] == 0
     n_columns =  w // patch_size[0]
