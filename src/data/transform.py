@@ -1,7 +1,7 @@
 import torch
 
 
-class Pachify:
+class Patchify:
     def __init__(self, patch_size=(16, 16), flatten_patch_dims=True):
         self.patch_h, self.patch_w = patch_size
         self.flatten_patch_dims = flatten_patch_dims
@@ -26,8 +26,8 @@ class Pachify:
 if __name__ == "__main__":
     data = torch.rand((1, 3, 224, 224))
     print(data.shape)
-    patchify = Pachify(flatten_patch_dims=False)
-    patchify_flat = Pachify(flatten_patch_dims=True)
+    patchify = Patchify(flatten_patch_dims=False)
+    patchify_flat = Patchify(flatten_patch_dims=True)
     print(patchify(data).shape)
     print(patchify_flat(data).shape)
     
