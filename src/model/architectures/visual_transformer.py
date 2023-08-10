@@ -12,9 +12,9 @@ class ScaledDotProductAttention(nn.Module):
         super().__init__()
         
     def forward(self, q, k, v):
-        # q, k, v shape: [N, seq_len, emb_size]
-        emb_size = q.shape[-1]
+        d_k = q.shape[-1]
         attention_scores = torch.matmul(q, k.transpose(-2, -1))
+        attention_scores_scaled = attention_scores / torch.sqrt(torch.tensor(d_k))
         return attention_scores 
 
 
