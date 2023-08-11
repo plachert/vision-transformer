@@ -66,8 +66,31 @@ class MultiHeadAttention(nn.Module):
         return projeted_attention
 
 
+class EncoderBlock(nn.Module):
+    def __init__(self, emb_dim, num_heads, dim_feedforward, dropout=0.0):
+        super().__init__()
+        self.attn = MultiHeadAttention(emb_dim, num_heads)
+        self.feedforward = nn.Sequential(
+            nn.Linear(emb_dim, dim_feedforward),
+            nn.Dropout(dropout),
+            nn.ReLU(inplace=True),
+            nn.Linear(dim_feedforward, emb_dim), 
+        )
+        self.norm_1 = nn.LayerNorm(emb_dim)
+        self.norm_2 = nn.LayerNorm(emb_dim)
+        
+    def forward(self, sequence):
+        sequence = sequence + self.attn(q=sequence, k=sequence, v=sequence) # 1st skip connection
+        sequence = self.norm_1(sequence)
+        sequence = sequence + self.feedforward(sequence) # 2nd skip connection
+        sequence = self.norm_2(sequence)
+        return sequence
+        
+
 class TransformerEncoder(nn.Module):
-    pass
+    def __init__(self):
+        super().__init__()
+        
 
 
 class ViT(nn.Module):
@@ -78,7 +101,9 @@ if __name__ == "__main__":
     q, k = [torch.rand(1, 3, 256) for _ in range(2)]
     v = torch.rand(1, 3, 256)
     a = MultiHeadAttention(256)
-    print(a(q, k , v).shape)
+    # print(a(q, k , v).shape)
+    encoder_block = EncoderBlock(256, 8, 256)
+    print(encoder_block(torch.rand(1, 100, 256)).shape)
     # sequence = torch.rand(1, 10, 3, 3)
     # m = MultiHeadAttention(3, 3)
     # print(m(sequence).shape)
