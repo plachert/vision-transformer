@@ -59,7 +59,8 @@ class MultiHeadAttention(nn.Module):
         V = [net(v[:, idx, ...]) for idx, net in enumerate(self.v_transform)]
         attentions = [self.scaled_attention(Q[idx], K[idx], V[idx]) for idx in range(self.num_heads)]
         attention = torch.cat(attentions, dim=-1)
-        return attention
+        projeted_attention = self.linear_projection(attention)
+        return projeted_attention
 
 
 class TransformerEncoder(nn.Module):
