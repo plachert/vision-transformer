@@ -22,7 +22,26 @@ class ScaledDotProductAttention(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    pass
+    def __init__(
+        self, 
+        seq_len: int, 
+        emb_dim: int, 
+        num_heads: int = 8,
+        ):
+        super().__init__()
+        assert emb_dim % num_heads == 0
+        # Q, K, V
+        self.q_transform = nn.Linear(seq_len, emb_dim, bias=False)
+        self.k_transform = nn.Linear(seq_len, emb_dim, bias=False)
+        self.v_transform = nn.Linear(seq_len, emb_dim, bias=False)
+        # Scaled Dot-Product Attention
+        self.scaled_attention = ScaledDotProductAttention()
+        # Linear projection (last layer)
+        self.linear_projection = nn.Linear(emb_dim, emb_dim)
+        self._init_params()
+        
+    def _init_params(self):
+        pass
 
 
 class TransformerEncoder(nn.Module):
