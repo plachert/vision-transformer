@@ -24,16 +24,17 @@ class ScaledDotProductAttention(nn.Module):
 class MultiHeadAttention(nn.Module):
     def __init__(
         self, 
-        seq_len: int, 
         emb_dim: int, 
         num_heads: int = 8,
         ):
         super().__init__()
         assert emb_dim % num_heads == 0
+        self.head_dim = emb_dim // num_heads
+        self.num_heads = num_heads
         # Q, K, V
-        self.q_transform = nn.Linear(seq_len, emb_dim, bias=False)
-        self.k_transform = nn.Linear(seq_len, emb_dim, bias=False)
-        self.v_transform = nn.Linear(seq_len, emb_dim, bias=False)
+        self.q_transform = nn.ModuleList([nn.Linear(self.head_dim, self.head_dim, bias=False) for _ in range(num_heads)])
+        self.k_transform = nn.ModuleList([nn.Linear(self.head_dim, self.head_dim, bias=False) for _ in range(num_heads)])
+        self.v_transform = nn.ModuleList([nn.Linear(self.head_dim, self.head_dim, bias=False) for _ in range(num_heads)])
         # Scaled Dot-Product Attention
         self.scaled_attention = ScaledDotProductAttention()
         # Linear projection (last layer)
@@ -42,6 +43,23 @@ class MultiHeadAttention(nn.Module):
         
     def _init_params(self):
         pass
+    
+    def _chunk_qkv(self, q, k, v):
+        n, _, _ = q.size()
+        q = q.view(n, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        k = k.view(n, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        v = v.view(n, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        return q, k, v
+    
+    def forward(self, q, k, v):
+        # TODO: vectorize
+        q, k, v = self._chunk_qkv(q, k, v)
+        Q = [net(q[:, idx, ...]) for idx, net in enumerate(self.q_transform)]
+        K = [net(k[:, idx, ...]) for idx, net in enumerate(self.k_transform)]
+        V = [net(v[:, idx, ...]) for idx, net in enumerate(self.v_transform)]
+        attentions = [self.scaled_attention(Q[idx], K[idx], V[idx]) for idx in range(self.num_heads)]
+        attention = torch.cat(attentions, dim=-1)
+        return attention
 
 
 class TransformerEncoder(nn.Module):
@@ -53,7 +71,10 @@ class ViT(nn.Module):
 
 
 if __name__ == "__main__":
-    a = ScaledDotProductAttention()
-    q, k, v = [torch.rand(1, 3, 1) for _ in range(3)]
-    print(q, k, v)
-    print(a(q, k, v))
+    q, k = [torch.rand(1, 3, 256) for _ in range(2)]
+    v = torch.rand(1, 3, 256)
+    a = MultiHeadAttention(256)
+    print(a(q, k , v).shape)
+    # sequence = torch.rand(1, 10, 3, 3)
+    # m = MultiHeadAttention(3, 3)
+    # print(m(sequence).shape)
