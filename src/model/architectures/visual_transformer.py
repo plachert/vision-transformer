@@ -42,7 +42,10 @@ class MultiHeadAttention(nn.Module):
         self._init_params()
         
     def _init_params(self):
-        pass
+        for q_l, v_l, v_l in zip(self.q_transform, self.k_transform, self.v_transform):
+            nn.init.xavier_uniform_(q_l.weight)
+            nn.init.xavier_uniform_(v_l.weight)
+            nn.init.xavier_uniform_(v_l.weight)
     
     def _chunk_qkv(self, q, k, v):
         n, _, _ = q.size()
