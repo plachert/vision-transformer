@@ -96,8 +96,14 @@ class EncoderBlock(nn.Module):
         
 
 class TransformerEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self, num_blocks, emb_dim, num_heads, dim_feedforward, dropout):
         super().__init__()
+        block_params = {"emb_dim": emb_dim, "num_heads": num_heads, "dim_feedforward": dim_feedforward, "dropout": dropout}
+        self.encode = nn.Sequential(*[EncoderBlock(**block_params) for _ in range(num_blocks)])
+    
+    def forward(self, sequence):
+        encoded = self.encode(sequence)
+        return encoded
         
 
 
@@ -110,7 +116,7 @@ if __name__ == "__main__":
     v = torch.rand(1, 3, 256)
     a = MultiHeadAttention(256)
     # print(a(q, k , v).shape)
-    encoder_block = EncoderBlock(256, 8, 256)
+    encoder_block = TransformerEncoder(6, 256, 8, 256, 0.2)
     print(encoder_block(torch.rand(1, 100, 256)).shape)
     # sequence = torch.rand(1, 10, 3, 3)
     # m = MultiHeadAttention(3, 3)
