@@ -67,23 +67,31 @@ class MultiHeadAttention(nn.Module):
 
 
 class EncoderBlock(nn.Module):
-    def __init__(self, emb_dim, num_heads, dim_feedforward, dropout=0.0):
+    def __init__(
+        self, 
+        emb_dim, 
+        num_heads, 
+        dim_feedforward,
+        dropout=0.0,
+        ):
         super().__init__()
         self.attn = MultiHeadAttention(emb_dim, num_heads)
         self.feedforward = nn.Sequential(
             nn.Linear(emb_dim, dim_feedforward),
             nn.Dropout(dropout),
-            nn.ReLU(inplace=True),
+            nn.GELU(),
             nn.Linear(dim_feedforward, emb_dim), 
+            nn.Dropout(dropout),
         )
         self.norm_1 = nn.LayerNorm(emb_dim)
         self.norm_2 = nn.LayerNorm(emb_dim)
+        self.pre_norm = True
         
     def forward(self, sequence):
+        sequence = self.norm_1(sequence) # pre-norm
         sequence = sequence + self.attn(q=sequence, k=sequence, v=sequence) # 1st skip connection
-        sequence = self.norm_1(sequence)
+        sequence = self.norm_2(sequence) # pre-norm
         sequence = sequence + self.feedforward(sequence) # 2nd skip connection
-        sequence = self.norm_2(sequence)
         return sequence
         
 
