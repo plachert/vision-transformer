@@ -146,23 +146,7 @@ class VisionTransformer(nn.Module):
         sequence = self.linear_projection(flattened_patches)
         sequence = self.pos_encoding(sequence)
         sequence = self.class_token(sequence)
-        encoded = self.transformer_encoder(sequence) # TODO: Add positional encoding
+        encoded = self.transformer_encoder(sequence)
         class_token = encoded[:, 0, :]
         out = self.mlp_head(class_token)
         return out
-
-if __name__ == "__main__":
-    vit = VisionTransformer(256, 3*16*16, 6, 8, 10, 14*14, 256, 0.2)
-    flattened_patches = torch.rand(1, 14*14, 3*16*16)
-    token = ClassToken(3*16*16)
-    print(token(flattened_patches).shape)
-    print(vit(flattened_patches).shape)
-    # q, k = [torch.rand(1, 3, 256) for _ in range(2)]
-    # v = torch.rand(1, 3, 256)
-    # a = MultiHeadAttention(256)
-    # # print(a(q, k , v).shape)
-    # encoder_block = TransformerEncoder(6, 256, 8, 256, 0.2)
-    # print(encoder_block(torch.rand(1, 100, 256)).shape)
-    # # sequence = torch.rand(1, 10, 3, 3)
-    # # m = MultiHeadAttention(3, 3)
-    # print(m(sequence).shape)
