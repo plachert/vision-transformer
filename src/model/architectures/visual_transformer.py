@@ -85,7 +85,6 @@ class EncoderBlock(nn.Module):
         )
         self.norm_1 = nn.LayerNorm(emb_dim)
         self.norm_2 = nn.LayerNorm(emb_dim)
-        self.pre_norm = True
         
     def forward(self, sequence):
         sequence = self.norm_1(sequence) # pre-norm
@@ -106,18 +105,40 @@ class TransformerEncoder(nn.Module):
         return encoded
         
 
-
-class ViT(nn.Module):
-    pass
-
+class VisionTransformer(nn.Module):
+    def __init__(self, emb_dim, patch_shape, num_blocks, num_channels, num_heads, num_classes, dim_feedforward, dropout):
+        super().__init__()
+        flatten_patch_dim = num_channels * patch_shape[0] * patch_shape[1]
+        self.linear_projection = nn.Linear(flatten_patch_dim, emb_dim) # Linear projection of flattened patches
+        self.transformer_encoder = TransformerEncoder(
+            num_blocks=num_blocks, 
+            emb_dim=emb_dim, 
+            num_heads=num_heads, 
+            dim_feedforward=dim_feedforward, 
+            dropout=dropout,
+            )
+        self.mlp_head = nn.Sequential(
+            nn.LayerNorm(emb_dim),
+            nn.Linear(emb_dim, num_classes)
+        )
+        self.dropout = nn.Dropout(dropout)
+        
+    def forward(self, flattened_patches):
+        sequence = self.linear_projection(flattened_patches)
+        encoded = self.transformer_encoder(sequence) # TODO: Add positional encoding
+        out = self.mlp_head(encoded)
+        return out
 
 if __name__ == "__main__":
-    q, k = [torch.rand(1, 3, 256) for _ in range(2)]
-    v = torch.rand(1, 3, 256)
-    a = MultiHeadAttention(256)
-    # print(a(q, k , v).shape)
-    encoder_block = TransformerEncoder(6, 256, 8, 256, 0.2)
-    print(encoder_block(torch.rand(1, 100, 256)).shape)
-    # sequence = torch.rand(1, 10, 3, 3)
-    # m = MultiHeadAttention(3, 3)
+    vit = VisionTransformer(256, (16, 16), 6, 3, 8, 10, 256, 0.2)
+    flattened_patches = torch.rand(1, 14*14, 3*16*16)
+    print(vit(flattened_patches).shape)
+    # q, k = [torch.rand(1, 3, 256) for _ in range(2)]
+    # v = torch.rand(1, 3, 256)
+    # a = MultiHeadAttention(256)
+    # # print(a(q, k , v).shape)
+    # encoder_block = TransformerEncoder(6, 256, 8, 256, 0.2)
+    # print(encoder_block(torch.rand(1, 100, 256)).shape)
+    # # sequence = torch.rand(1, 10, 3, 3)
+    # # m = MultiHeadAttention(3, 3)
     # print(m(sequence).shape)
