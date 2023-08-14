@@ -5,8 +5,8 @@ import torch.nn.functional as F
 
 class ClassToken(nn.Module):
     def __init__(self, emb_dim):
-        super().__init()
-        self.token = nn.Parameters(torch.rand(1, 1, emb_dim))
+        super().__init__()
+        self.token = nn.Parameter(torch.rand(1, 1, emb_dim))
         
     def forward(self, sequence):
         n, _, _ = sequence.size()
@@ -146,6 +146,8 @@ class VisionTransformer(nn.Module):
 if __name__ == "__main__":
     vit = VisionTransformer(256, (16, 16), 6, 3, 8, 10, 256, 0.2)
     flattened_patches = torch.rand(1, 14*14, 3*16*16)
+    token = ClassToken(3*16*16)
+    print(token(flattened_patches).shape)
     print(vit(flattened_patches).shape)
     # q, k = [torch.rand(1, 3, 256) for _ in range(2)]
     # v = torch.rand(1, 3, 256)
