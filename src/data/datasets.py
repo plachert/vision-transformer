@@ -53,7 +53,7 @@ class ImageNet100(ImageClassificationDataset):
         return self._labels
 
 
-class CIFAR100(torchvision.datasets.CIFAR10):
+class CIFAR10(torchvision.datasets.CIFAR10):
     def __init__(self, root=PATHS["CIFAR10"], download=True, *args, **kwargs):
         super().__init__(root=root, download=download, *args, **kwargs)
         
