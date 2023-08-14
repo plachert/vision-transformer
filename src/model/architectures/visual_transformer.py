@@ -4,9 +4,9 @@ import torch.nn.functional as F
 
 
 class ClassToken(nn.Module):
-    def __init__(self, emb_dim):
+    def __init__(self, emb_dim: int):
         super().__init__()
-        self.token = nn.Parameter(torch.rand(1, 1, emb_dim))
+        self.token = nn.Parameter(torch.randn(1, 1, emb_dim))
         
     def forward(self, sequence):
         n, _, _ = sequence.size()
@@ -16,8 +16,11 @@ class ClassToken(nn.Module):
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, emb_dim, sequence_len):
+    def __init__(self, emb_dim: int, sequence_len: int):
         super().__init()
+        self.encode = nn.Parameters(torch.randn(1, sequence_len, emb_dim))
+        
+    def forward(self, sequence):
         pass
 
 
@@ -120,10 +123,10 @@ class TransformerEncoder(nn.Module):
         
 
 class VisionTransformer(nn.Module):
-    def __init__(self, emb_dim, patch_shape, num_blocks, num_channels, num_heads, num_classes, dim_feedforward, dropout):
+    def __init__(self, emb_dim, flatten_patch_dim, num_blocks, num_heads, num_classes, dim_feedforward, dropout):
         super().__init__()
-        flatten_patch_dim = num_channels * patch_shape[0] * patch_shape[1]
         self.linear_projection = nn.Linear(flatten_patch_dim, emb_dim) # Linear projection of flattened patches
+        self.class_token = ClassToken(emb_dim)
         self.transformer_encoder = TransformerEncoder(
             num_blocks=num_blocks, 
             emb_dim=emb_dim, 
@@ -139,12 +142,13 @@ class VisionTransformer(nn.Module):
         
     def forward(self, flattened_patches):
         sequence = self.linear_projection(flattened_patches)
+        sequence = self.class_token(sequence)
         encoded = self.transformer_encoder(sequence) # TODO: Add positional encoding
         out = self.mlp_head(encoded)
         return out
 
 if __name__ == "__main__":
-    vit = VisionTransformer(256, (16, 16), 6, 3, 8, 10, 256, 0.2)
+    vit = VisionTransformer(256, 3*16*16, 6, 8, 10, 256, 0.2)
     flattened_patches = torch.rand(1, 14*14, 3*16*16)
     token = ClassToken(3*16*16)
     print(token(flattened_patches).shape)
