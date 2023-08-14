@@ -3,8 +3,22 @@ import torch
 import torch.nn.functional as F
 
 
+class ClassToken(nn.Module):
+    def __init__(self, emb_dim):
+        super().__init()
+        self.token = nn.Parameters(torch.rand(1, 1, emb_dim))
+        
+    def forward(self, sequence):
+        n, _, _ = sequence.size()
+        batch_token = self.token.repeat(n, 1, 1)
+        sequence = torch.cat([batch_token, sequence], dim=1)
+        return sequence
+
+
 class PositionalEncoding(nn.Module):
-    pass
+    def __init__(self, emb_dim, sequence_len):
+        super().__init()
+        pass
 
 
 class ScaledDotProductAttention(nn.Module):
