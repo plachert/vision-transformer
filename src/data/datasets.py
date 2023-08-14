@@ -3,9 +3,12 @@ import pathlib
 import json
 import numpy as np
 from typing import Callable
+import torchvision
+
 
 PATHS = {
-    "ImageNet100": pathlib.Path('/home/piotr/datasets/vision/imagenet_100')
+    "ImageNet100": pathlib.Path('/home/piotr/datasets/vision/imagenet_100'),
+    "CIFAR10": pathlib.Path('/home/piotr/datasets/vision/cifar10'),
 }
 
 
@@ -48,3 +51,16 @@ class ImageNet100(ImageClassificationDataset):
     @property
     def labels(self) -> np.ndarray:
         return self._labels
+
+
+class CIFAR100(torchvision.datasets.CIFAR10):
+    def __init__(self, root=PATHS["CIFAR10"], download=True, *args, **kwargs):
+        super().__init__(root=root, download=download, *args, **kwargs)
+        
+    @property
+    def no_classes(self):
+        return 10
+    
+    def __getitem__(self, idx):
+        image, label = super().__getitem__(idx)
+        return {"image": image, "label": label}
