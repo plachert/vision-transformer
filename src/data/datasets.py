@@ -8,7 +8,7 @@ import torchvision
 
 PATHS = {
     "ImageNet100": pathlib.Path('/home/piotr/datasets/vision/imagenet_100'),
-    "CIFAR10": pathlib.Path('/home/piotr/datasets/vision/cifar10'),
+    "CIFAR10": pathlib.Path('/home/piotr/datasets/vision/cifar_10'),
 }
 
 
