@@ -36,7 +36,7 @@ class ScaledDotProductAttention(nn.Module):
         attention_scores_scaled = attention_scores / torch.sqrt(torch.tensor(d_k)) # Scale
         attention_weights  = F.softmax(attention_scores_scaled, -1) # softmax
         attention = torch.matmul(attention_weights, v) # matmul weights and V
-        return attention 
+        return attention
 
 
 class MultiHeadAttention(nn.Module):
@@ -141,6 +141,14 @@ class VisionTransformer(nn.Module):
             nn.Linear(emb_dim, num_classes)
         )
         self.dropout = nn.Dropout(dropout)
+        
+    def get_attention(self, flattened_patches):
+        sequence = self.linear_projection(flattened_patches)
+        sequence = self.pos_encoding(sequence)
+        sequence = self.class_token(sequence)
+        encoded = self.transformer_encoder(sequence)
+        return encoded
+        
         
     def forward(self, flattened_patches):
         sequence = self.linear_projection(flattened_patches)
