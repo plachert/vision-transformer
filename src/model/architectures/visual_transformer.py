@@ -6,6 +6,9 @@ import torch.nn.functional as F
 class PatchProjection(nn.Module):
     def __init__(self, patch_shape=(3, 16, 16), emb_size=256):
         super().__init__()
+        self.emb_size = emb_size
+        self.patch_h = patch_shape[1]
+        self.patch_w = patch_shape[2]
         self.conv = nn.Conv2d(
                 in_channels=patch_shape[0], 
                 out_channels=emb_size, 
@@ -14,7 +17,15 @@ class PatchProjection(nn.Module):
             )
     
     def forward(self, image):
-        return self.conv(image)
+        n, c, h, w = image.size() # N, C, H, W
+        n_h = h // self.patch_h
+        n_w = w // self.patch_w
+        assert h % self.patch_h == 0
+        assert w % self.patch_w == 0
+        projection = self.conv(image) # N, emb_size, n_h, n_w
+        projection_flattened = projection.reshape(n, self.emb_size, n_h * n_w) # N, emb_size, seq_len
+        out = projection_flattened.permute(0, 2, 1) # N, seq_len, emb_size
+        return out
 
 
 class ClassToken(nn.Module):
@@ -138,9 +149,10 @@ class TransformerEncoder(nn.Module):
         
 
 class VisionTransformer(nn.Module):
-    def __init__(self, emb_dim, flatten_patch_dim, num_blocks, num_heads, num_classes, num_patches, dim_feedforward, dropout):
+    def __init__(self, emb_dim, patch_shape, num_blocks, num_heads, num_classes, num_patches, dim_feedforward, dropout):
         super().__init__()
-        self.linear_projection = nn.Linear(flatten_patch_dim, emb_dim) # Linear projection of flattened patches
+        # self.linear_projection = nn.Linear(flatten_patch_dim, emb_dim) # Linear projection of flattened patches
+        self.patch_projection = PatchProjection(patch_shape, emb_dim)
         self.pos_encoding = PositionalEncoding(emb_dim, num_patches)
         self.class_token = ClassToken(emb_dim)
         self.transformer_encoder = TransformerEncoder(
@@ -156,16 +168,9 @@ class VisionTransformer(nn.Module):
         )
         self.dropout = nn.Dropout(dropout)
         
-    def get_attention(self, flattened_patches):
-        sequence = self.linear_projection(flattened_patches)
-        sequence = self.pos_encoding(sequence)
-        sequence = self.class_token(sequence)
-        encoded = self.transformer_encoder(sequence)
-        return encoded
         
-        
-    def forward(self, flattened_patches):
-        sequence = self.linear_projection(flattened_patches)
+    def forward(self, image):
+        sequence = self.patch_projection(image)
         sequence = self.pos_encoding(sequence)
         sequence = self.class_token(sequence)
         encoded = self.transformer_encoder(sequence)
@@ -178,3 +183,6 @@ if __name__ == "__main__":
     image = torch.rand(1, 3, 224, 224)
     patch_prj = PatchProjection()
     print(patch_prj(image).shape)
+
+    m = VisionTransformer(256, (3, 16, 16), 6, 8, 10, 14*14, 256, 0)
+    print(m(torch.rand(1, 3, 224, 224)).shape)
