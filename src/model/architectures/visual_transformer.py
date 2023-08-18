@@ -5,6 +5,7 @@ import torch.nn.functional as F
 
 class PatchProjection(nn.Module):
     def __init__(self, patch_shape=(3, 16, 16), emb_size=256):
+        super().__init__()
         self.conv = nn.Conv2d(
                 in_channels=patch_shape[0], 
                 out_channels=emb_size, 
@@ -171,3 +172,9 @@ class VisionTransformer(nn.Module):
         class_token = encoded[:, 0, :]
         out = self.mlp_head(class_token)
         return out
+    
+if __name__ == "__main__":
+    import torch
+    image = torch.rand(1, 3, 224, 224)
+    patch_prj = PatchProjection()
+    print(patch_prj(image).shape)
