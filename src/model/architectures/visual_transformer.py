@@ -3,6 +3,19 @@ import torch
 import torch.nn.functional as F
 
 
+class PatchProjection(nn.Module):
+    def __init__(self, patch_shape=(3, 16, 16), emb_size=256):
+        self.conv = nn.Conv2d(
+                in_channels=patch_shape[0], 
+                out_channels=emb_size, 
+                kernel_size=patch_shape[1:], 
+                stride=patch_shape[1:],
+            )
+    
+    def forward(self, image):
+        return self.conv(image)
+
+
 class ClassToken(nn.Module):
     def __init__(self, emb_dim: int):
         super().__init__()
