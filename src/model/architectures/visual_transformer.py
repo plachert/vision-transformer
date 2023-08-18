@@ -151,7 +151,6 @@ class TransformerEncoder(nn.Module):
 class VisionTransformer(nn.Module):
     def __init__(self, emb_dim, patch_shape, num_blocks, num_heads, num_classes, num_patches, dim_feedforward, dropout):
         super().__init__()
-        # self.linear_projection = nn.Linear(flatten_patch_dim, emb_dim) # Linear projection of flattened patches
         self.patch_projection = PatchProjection(patch_shape, emb_dim)
         self.pos_encoding = PositionalEncoding(emb_dim, num_patches)
         self.class_token = ClassToken(emb_dim)
