@@ -1,3 +1,5 @@
+"""This module provides implementation of Visual Transformer described in https://arxiv.org/pdf/2010.11929v2.pdf."""
+
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
