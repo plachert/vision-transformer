@@ -131,8 +131,8 @@ class EncoderBlock(nn.Module):
         self.attn = MultiHeadAttention(emb_dim, num_heads)
         self.feedforward = nn.Sequential(
             nn.Linear(emb_dim, dim_feedforward),
-            nn.Dropout(dropout),
             nn.GELU(),
+            nn.Dropout(dropout),
             nn.Linear(dim_feedforward, emb_dim), 
             nn.Dropout(dropout),
         )
@@ -176,8 +176,7 @@ class VisionTransformer(nn.Module):
             nn.Linear(emb_dim, num_classes)
         )
         self.dropout = nn.Dropout(dropout)
-        
-        
+
     def forward(self, image):
         sequence = self.patch_projection(image)
         sequence = self.pos_encoding(sequence)
@@ -186,7 +185,8 @@ class VisionTransformer(nn.Module):
         class_token = encoded[:, 0, :]
         out = self.mlp_head(class_token)
         return out
-    
+   
+
 if __name__ == "__main__":
     import torch
     image = torch.rand(1, 3, 224, 224)
