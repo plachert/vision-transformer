@@ -11,11 +11,12 @@ class ImageClassifier(L.LightningModule):
             self,
             model: nn.Module,
             optimizer_factory: torch.optim.Optimizer,
-            num_classes: int, 
+            num_classes: int,
+            label_smoothing: float = 0.,
             ):
         super().__init__()
         self.model = model
-        self.loss = nn.CrossEntropyLoss()
+        self.loss = nn.CrossEntropyLoss(label_smoothing=label_smoothing)
         self.optimizer = optimizer_factory(self.parameters())
         self._setup_metrics(num_classes)
 
