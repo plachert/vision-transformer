@@ -17,7 +17,6 @@ inference_transform = transforms.Compose(
         transforms.ToTensor(),
         transforms.CenterCrop(224),
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-        # Patchify((32, 32)),
     ]
     )
 train_transform = transforms.Compose(
@@ -26,7 +25,6 @@ train_transform = transforms.Compose(
         transforms.RandomResizedCrop((224, 224), scale=(0.8,1.0), ratio=(0.9,1.1)),
         transforms.ToTensor(),
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-        # Patchify((32, 32)),
     ]
     )
 
@@ -54,20 +52,21 @@ def main():
 #     nn.Linear(1280, 100)
 # )
     m = VisionTransformer(
-        emb_dim=256, 
+        emb_dim=768, 
         patch_shape=(3, 32, 32), 
-        num_blocks=6, 
+        num_blocks=12, 
         num_heads=8, 
         num_patches=49, 
         num_classes=100, 
-        dim_feedforward=512,
-        dropout=0.3,
+        dim_feedforward=3072,
+        dropout=0.2,
         )
     #####
     model = ImageClassifier(
         model=m,
-        optimizer_factory=partial(Adam, lr=0.001),
+        optimizer_factory=partial(Adam, lr=0.001, weight_decay=0.1),
         num_classes=100,
+        label_smoothing=0.2,
         )
     tb_logger = pl_loggers.TensorBoardLogger(save_dir='logs/imagenet100_vit_32_conv2d')
     trainer = L.Trainer(max_epochs=100, accelerator='gpu', logger=tb_logger)
