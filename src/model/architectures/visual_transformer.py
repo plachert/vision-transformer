@@ -7,6 +7,7 @@ class PatchProjection(nn.Module):
     def __init__(self, patch_shape=(3, 16, 16), emb_size=256):
         super().__init__()
         self.emb_size = emb_size
+        self.patch_c = patch_shape[0]
         self.patch_h = patch_shape[1]
         self.patch_w = patch_shape[2]
         self.conv = nn.Conv2d(
@@ -15,13 +16,20 @@ class PatchProjection(nn.Module):
                 kernel_size=patch_shape[1:], 
                 stride=patch_shape[1:],
             )
-    
-    def forward(self, image):
-        n, c, h, w = image.size() # N, C, H, W
+        
+    def get_num_patches(self, image):
+        """Return number of patches across height and width along with batch size."""
+        n, c, h, w = image.size()
+        assert c == self.patch_c, f"{self.patch_c} channels expected"
         n_h = h // self.patch_h
         n_w = w // self.patch_w
-        assert h % self.patch_h == 0
-        assert w % self.patch_w == 0
+        assert h % self.patch_h == 0, "Image height not divisible by patch height"
+        assert w % self.patch_w == 0, "Image width not divisible by patch width"
+        return n, n_h, n_w
+        
+    
+    def forward(self, image):
+        n, n_h, n_w = self.get_num_patches(image)
         projection = self.conv(image) # N, emb_size, n_h, n_w
         projection_flattened = projection.reshape(n, self.emb_size, n_h * n_w) # N, emb_size, seq_len
         out = projection_flattened.permute(0, 2, 1) # N, seq_len, emb_size
