@@ -71,7 +71,7 @@ class ScaledDotProductAttention(nn.Module):
         attention_scores_scaled = attention_scores / torch.sqrt(torch.tensor(d_k)) # Scale
         attention_weights  = F.softmax(attention_scores_scaled, -1) # softmax
         attention = torch.matmul(attention_weights, v) # matmul weights and V
-        return attention
+        return {"attention": attention, "attention_weights": attention_weights}
 
 
 class MultiHeadAttention(nn.Module):
@@ -113,10 +113,15 @@ class MultiHeadAttention(nn.Module):
         Q = [net(q[:, idx, ...]) for idx, net in enumerate(self.q_transform)]
         K = [net(k[:, idx, ...]) for idx, net in enumerate(self.k_transform)]
         V = [net(v[:, idx, ...]) for idx, net in enumerate(self.v_transform)]
-        attentions = [self.scaled_attention(Q[idx], K[idx], V[idx]) for idx in range(self.num_heads)]
+        attentions = []
+        attentions_weights = []
+        for idx in range(self.num_heads):
+            att_result = self.scaled_attention(Q[idx], K[idx], V[idx])
+            attentions_weights.append(att_result["attention_weights"])
+            attentions.append(att_result["attention"])
         attention = torch.cat(attentions, dim=-1)
         projeted_attention = self.linear_projection(attention)
-        return projeted_attention
+        return projeted_attention, attentions_weights
 
 
 class EncoderBlock(nn.Module):
@@ -139,12 +144,13 @@ class EncoderBlock(nn.Module):
         self.norm_1 = nn.LayerNorm(emb_dim)
         self.norm_2 = nn.LayerNorm(emb_dim)
         
-    def forward(self, sequence):
+    def forward(self, sequence, *args):
         sequence = self.norm_1(sequence) # pre-norm
-        sequence = sequence + self.attn(q=sequence, k=sequence, v=sequence) # 1st skip connection
+        projected_attention, attentions = self.attn(q=sequence, k=sequence, v=sequence)
+        sequence = sequence + projected_attention # 1st skip connection
         sequence = self.norm_2(sequence) # pre-norm
         sequence = sequence + self.feedforward(sequence) # 2nd skip connection
-        return sequence
+        return sequence, attentions
         
 
 class TransformerEncoder(nn.Module):
@@ -152,9 +158,17 @@ class TransformerEncoder(nn.Module):
         super().__init__()
         block_params = {"emb_dim": emb_dim, "num_heads": num_heads, "dim_feedforward": dim_feedforward, "dropout": dropout}
         self.encode = nn.Sequential(*[EncoderBlock(**block_params) for _ in range(num_blocks)])
+        
+    def get_attentions(self, sequence):
+        attn = []
+        for encoder in self.encode:
+            sequence, attentions = encoder(sequence)
+            attn.append(attentions)
+        return attn
+        
     
     def forward(self, sequence):
-        encoded = self.encode(sequence)
+        encoded, _ = self.encode(sequence)
         return encoded
         
 
@@ -176,6 +190,12 @@ class VisionTransformer(nn.Module):
             nn.Linear(emb_dim, num_classes)
         )
         self.dropout = nn.Dropout(dropout)
+        
+    def get_attentions(self, image):
+        sequence = self.patch_projection(image)
+        sequence = self.pos_encoding(sequence)
+        sequence = self.class_token(sequence)
+        return self.transformer_encoder.get_attentions(sequence)
 
     def forward(self, image):
         sequence = self.patch_projection(image)
